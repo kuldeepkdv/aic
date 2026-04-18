@@ -82,6 +82,34 @@ pixi run ros2 run aic_model aic_model --ros-args -p use_sim_time:=true -p policy
 
 ---
 
+---
+
+### 4. VisionGuidedInsert - 3-Camera Perception + Motion Planner
+
+A classical perception + motion-planning baseline that does not rely on
+ground truth. At each tick, a port detector (OpenCV) runs on the left,
+center, and right wrist images; detections are triangulated via linear
+DLT using the camera intrinsics (from `CameraInfo`) and the
+base_link ← camera_optical extrinsics (from TF) to produce a 3D port
+position. A three-phase planner then commands the TCP:
+`APPROACH` (stand-off above the port), `ALIGN` (match the port axis and
+servo lateral xy error), and `INSERT` (linear descent along the port
+axis, terminating on depth or on a force threshold).
+
+**Purpose:** Reference implementation of a from-scratch vision-based
+insertion stack. Swap in your own port detector or pose estimator by
+replacing `aic_example_policies.perception.PortDetector` /
+`_port_orientation_guess`.
+
+**Run the policy:**
+```bash
+pixi run ros2 run aic_model aic_model --ros-args -p use_sim_time:=true -p policy:=aic_example_policies.ros.VisionGuidedInsert
+```
+
+**Source:** [`VisionGuidedInsert.py`](./aic_example_policies/ros/VisionGuidedInsert.py)
+
+---
+
 ## Scoring Examples
 
 For expected scoring results and reproducible test commands for each policy, see the [Scoring Test & Evaluation Guide](../../docs/scoring_tests.md).
