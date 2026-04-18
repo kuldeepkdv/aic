@@ -220,9 +220,15 @@ class MotionPlanner:
         x_cur = R_cur[:, 0]
         x_proj = x_cur - np.dot(x_cur, z_axis) * z_axis
         if np.linalg.norm(x_proj) < 1e-6:
-            # Degenerate: pick any perpendicular vector.
-            x_proj = np.array([1.0, 0.0, 0.0])
-            x_proj = x_proj - np.dot(x_proj, z_axis) * z_axis
+            # Degenerate: current tool-x is parallel to the port axis.
+            # Pick whichever world axis is least parallel to z_axis.
+            for candidate in (np.array([1.0, 0.0, 0.0]),
+                              np.array([0.0, 1.0, 0.0]),
+                              np.array([0.0, 0.0, 1.0])):
+                p = candidate - np.dot(candidate, z_axis) * z_axis
+                if np.linalg.norm(p) > 1e-6:
+                    x_proj = p
+                    break
         x_axis = x_proj / np.linalg.norm(x_proj)
         y_axis = np.cross(z_axis, x_axis)
         R = np.eye(4)
